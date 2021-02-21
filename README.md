@@ -1,0 +1,1 @@
+1. start by setting up the [Raspberry Pi](raspberrypi/README.md)
