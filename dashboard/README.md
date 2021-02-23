@@ -43,5 +43,3 @@ The container exposes the following ports:
 - `9125`: the StatsD repeater's UDP port.
 - `8126`: the StatsD administrative port.
 - `9102`: statsD prometheus metrics
-- `9090`: prometheus metrics
-- `9093`: alertmanager
