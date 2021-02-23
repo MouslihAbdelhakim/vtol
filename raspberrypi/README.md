@@ -30,3 +30,4 @@ auto wlan0
 ```
 8. `sudo reboot`, and test that you can `ssh pi@192.168.1.200`
 9. `sudo apt-get update && sudo apt-get dist-upgrade`
+10. exit the ssh session, and on the your local machine `ssh-copy-id pi@192.168.1.200 && ssh-add` to enable ssh loging without password
