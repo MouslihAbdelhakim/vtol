@@ -25,6 +25,7 @@ services:
     container_name: myop-graphite-carbon
     ports:
       - "8080:80"
+      - "2003:2003"
     environment: 
       - GRAPHITE_STATSD_HOST=statsd
     expose: 
