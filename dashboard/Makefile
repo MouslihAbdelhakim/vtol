@@ -16,7 +16,7 @@ pull :
 	docker-compose pull
 
 up : prep pull
-	docker-compose -f docker-compose.yml up -d
+	docker-compose -f docker-compose.yml up -d && docker ps 
 
 down :
 	docker-compose -f docker-compose.yml down
