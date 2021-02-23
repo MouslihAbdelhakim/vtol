@@ -1,23 +1,24 @@
 package io.github.mouslihabdelhakim.vtol.services.led
 
-import fs2.{INothing, Stream}
+import cats.Eq
+import fs2.{Pure, Stream}
 import io.github.mouslihabdelhakim.vtol.services.led.Navio2RGBLed.Color
 
 trait Navio2RGBLed[F[_]] {
 
-  def write(colors: Stream[F, Color]): Stream[F, INothing]
+  def write(colors: Stream[F, Color]): Stream[F, Unit]
 
 }
 
 object Navio2RGBLed {
 
   sealed abstract class LedState(
-      val representation: List[Byte]
+      val representation: Stream[Pure, Byte]
   )
 
   object LedState {
-    case object Off extends LedState("255\n".getBytes.toList)
-    case object On  extends LedState("0\n".getBytes.toList)
+    case object Off extends LedState(Stream.emits("255\n".getBytes))
+    case object On  extends LedState(Stream.emits("0\n".getBytes.toList))
   }
 
   sealed abstract class Color(val red: LedState, val green: LedState, val blue: LedState)
@@ -32,6 +33,8 @@ object Navio2RGBLed {
     case object Magenta extends Color(red = On, green = Off, blue = On)
     case object Yellow  extends Color(red = On, green = On, blue = Off)
     case object White   extends Color(red = On, green = On, blue = On)
+
+    implicit val eq: Eq[Color] = Eq.fromUniversalEquals[Color]
   }
 
 }
