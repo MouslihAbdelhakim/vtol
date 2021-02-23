@@ -24,9 +24,10 @@ class Navio2RGBLedImplementation[F[_]](
 ) extends Navio2RGBLed[F] {
 
   override def write(colors: Stream[F, Color]): Stream[F, Unit] = {
-    val redStream   = writeGamma(_.red, redLedPath, colors)
-    val greenStream = writeGamma(_.green, greenLedPath, colors)
-    val blueStream  = writeGamma(_.blue, blueLedPath, colors)
+    val throttledColors = colors.metered(rate)
+    val redStream       = writeGamma(_.red, redLedPath, throttledColors)
+    val greenStream     = writeGamma(_.green, greenLedPath, throttledColors)
+    val blueStream      = writeGamma(_.blue, blueLedPath, throttledColors)
 
     redStream.merge(greenStream).merge(blueStream)
   }
@@ -36,9 +37,7 @@ class Navio2RGBLedImplementation[F[_]](
       ledPath: Path,
       colors: Stream[F, Color]
   ): Stream[F, Unit] = {
-    colors
-      .metered(rate)
-      .changes
+    colors.changes
       .flatMap(c => toSingleLedState(c).representation)
       .through(
         writeAll(
