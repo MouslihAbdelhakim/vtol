@@ -1,6 +1,6 @@
 # Vtol's dashboard
 
-This folder should contain everything to allow you to store and display metrics on a grafana dashboard. The content of this folder are cloned from https://github.com/myoperator/grafana-graphite-statsd
+This folder should contain everything you need to store and display metrics on a grafana dashboard. The content of this folder are cloned from https://github.com/myoperator/grafana-graphite-statsd
 
 ## Manage the dashboard
 
