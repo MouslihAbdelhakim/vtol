@@ -1,6 +1,7 @@
 package io.github.mouslihabdelhakim.vtol.services.led
 
 import cats.Eq
+import cats.effect.{Blocker, Concurrent, ContextShift, Timer}
 import fs2.{Pure, Stream}
 import io.github.mouslihabdelhakim.vtol.services.led.Navio2RGBLed.Color
 
@@ -12,6 +13,14 @@ trait Navio2RGBLed[F[_]] {
 
 object Navio2RGBLed {
 
+  def make[F[_]](
+      blockingExecutionContext: Blocker
+  )(implicit
+      C: Concurrent[F],
+      CS: ContextShift[F],
+      T: Timer[F]
+  ): F[Navio2RGBLed[F]] = Navio2RGBLedImplementation(blockingExecutionContext)
+
   sealed abstract class LedState(
       val representation: Stream[Pure, Byte]
   )
@@ -19,9 +28,10 @@ object Navio2RGBLed {
   object LedState {
     case object Off extends LedState(Stream.emits("255\n".getBytes))
     case object On  extends LedState(Stream.emits("0\n".getBytes.toList))
+    implicit val eq: Eq[LedState] = Eq.fromUniversalEquals[LedState]
   }
 
-  sealed abstract class Color(val red: LedState, val green: LedState, val blue: LedState)
+  sealed abstract class Color(val red: LedState, val green: LedState, val blue: LedState) extends Product with Serializable
 
   object Color {
     import LedState._
@@ -34,7 +44,6 @@ object Navio2RGBLed {
     case object Yellow  extends Color(red = On, green = On, blue = Off)
     case object White   extends Color(red = On, green = On, blue = On)
 
-    implicit val eq: Eq[Color] = Eq.fromUniversalEquals[Color]
   }
 
 }
