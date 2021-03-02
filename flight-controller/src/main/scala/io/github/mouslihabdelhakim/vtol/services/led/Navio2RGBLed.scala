@@ -1,25 +1,42 @@
 package io.github.mouslihabdelhakim.vtol.services.led
 
 import cats.Eq
-import cats.effect.{Blocker, Concurrent, ContextShift, Timer}
-import fs2.{Pure, Stream}
-import io.github.mouslihabdelhakim.vtol.services.led.Navio2RGBLed.Color
+import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import fs2.io.file.writeAll
+import fs2.{Pipe, Pure, Stream}
 
-trait Navio2RGBLed[F[_]] {
-
-  def write(colors: Stream[F, Color]): Stream[F, Unit]
-
-}
+import java.nio.file.{Path, Paths, StandardOpenOption}
 
 object Navio2RGBLed {
 
-  def make[F[_]](
-      blockingExecutionContext: Blocker
+  def apply[F[_]](implicit
+      C: Concurrent[F],
+      CS: ContextShift[F]
+  ): Resource[F, Pipe[F, Color, Unit]] =
+    Blocker.apply[F].evalMap { ec =>
+      for {
+        redLedPath <- Sync[F].delay(Paths.get("/sys/class/leds/rgb_led0/brightness"))
+        greenLedPath <- Sync[F].delay(Paths.get("/sys/class/leds/rgb_led1/brightness"))
+        blueLedPath <- Sync[F].delay(Paths.get("/sys/class/leds/rgb_led2/brightness"))
+      } yield apply(ec, redLedPath, greenLedPath, blueLedPath)
+    }
+
+  private def apply[F[_]](
+      ec: Blocker,
+      redLed: Path,
+      greenLed: Path,
+      blueLed: Path
   )(implicit
       C: Concurrent[F],
-      CS: ContextShift[F],
-      T: Timer[F]
-  ): F[Navio2RGBLed[F]] = Navio2RGBLedImplementation(blockingExecutionContext)
+      CS: ContextShift[F]
+  ): Pipe[F, Color, Unit] = colors => {
+    val redStream   = writeGamma(_.red, redLed, colors, ec)
+    val greenStream = writeGamma(_.green, greenLed, colors, ec)
+    val blueStream  = writeGamma(_.blue, blueLed, colors, ec)
+    redStream.merge(greenStream).merge(blueStream)
+  }
 
   sealed abstract class LedState(
       val representation: Stream[Pure, Byte]
@@ -44,6 +61,28 @@ object Navio2RGBLed {
     case object Yellow  extends Color(red = On, green = On, blue = Off)
     case object White   extends Color(red = On, green = On, blue = On)
 
+  }
+
+  private def writeGamma[F[_]](
+      toSingleLedState: Color => LedState,
+      ledPath: Path,
+      colors: Stream[F, Color],
+      ec: Blocker
+  )(implicit
+      CS: ContextShift[F],
+      S: Sync[F]
+  ): Stream[F, Unit] = {
+    colors
+      .map(toSingleLedState)
+      .changes
+      .flatMap(_.representation)
+      .through(
+        writeAll(
+          ledPath,
+          blocker = ec,
+          flags = Seq(StandardOpenOption.WRITE)
+        )
+      )
   }
 
 }
