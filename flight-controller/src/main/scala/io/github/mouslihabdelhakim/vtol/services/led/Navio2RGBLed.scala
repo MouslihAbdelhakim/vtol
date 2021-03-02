@@ -23,7 +23,7 @@ object Navio2RGBLed {
       } yield apply(ec, redLedPath, greenLedPath, blueLedPath)
     }
 
-  def apply[F[_]](
+  private def apply[F[_]](
       ec: Blocker,
       redLed: Path,
       greenLed: Path,
@@ -37,14 +37,6 @@ object Navio2RGBLed {
     val blueStream  = writeGamma(_.blue, blueLed, colors, ec)
     redStream.merge(greenStream).merge(blueStream)
   }
-
-  def make[F[_]](
-      blockingExecutionContext: Blocker
-  )(implicit
-      C: Concurrent[F],
-      CS: ContextShift[F],
-      T: Timer[F]
-  ): F[Navio2RGBLed[F]] = Navio2RGBLedImplementation(blockingExecutionContext)
 
   sealed abstract class LedState(
       val representation: Stream[Pure, Byte]
