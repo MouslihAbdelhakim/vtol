@@ -60,6 +60,15 @@ lazy val commonSettings = Seq(
   scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-warnings")
 )
 
+lazy val D = new {
+  lazy val Version = new {
+    val fs2 = "2.5.0"
+  }
+
+  val fs2   = "co.fs2" %% "fs2-core" % Version.fs2
+  val fs2io = "co.fs2" %% "fs2-io"   % Version.fs2
+}
+
 lazy val vtol = Project(
   id = "vtol",
   base = file(".")
@@ -72,5 +81,11 @@ lazy val `flight-controller` = Project(
   base = file("./flight-controller")
 ).settings(moduleName := "flight-controller")
   .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      D.fs2,
+      D.fs2io
+    )
+  )
 
 addCommandAlias("validate", ";scalafmtCheck;scalafmtSbtCheck;test")
