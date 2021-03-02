@@ -24,7 +24,6 @@ object Main extends IOApp {
                     Navio2RGBLed.Color.Cyan,
                     Navio2RGBLed.Color.Magenta,
                     Navio2RGBLed.Color.Yellow,
-                    Navio2RGBLed.Color.White,
                     Navio2RGBLed.Color.White
                   )
                 )
