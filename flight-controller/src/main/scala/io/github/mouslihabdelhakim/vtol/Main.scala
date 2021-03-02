@@ -1,18 +1,18 @@
 package io.github.mouslihabdelhakim.vtol
 
+import cats.effect.{ExitCode, IO, IOApp}
 import fs2.Stream
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import io.github.mouslihabdelhakim.vtol.services.led.Navio2RGBLed
+import scala.concurrent.duration._
 
 object Main extends IOApp {
 
-  override def run(args: List[String]): IO[ExitCode] = {
-
+  override def run(args: List[String]): IO[ExitCode] =
     Navio2RGBLed
-      .make[IO](Blocker.liftExecutionContext(scala.concurrent.ExecutionContext.Implicits.global))
-      .flatMap {
-        _.write(
-          Stream.evals(
+      .apply[IO]
+      .use(led =>
+        Stream
+          .evals(
             IO.pure(
               List
                 .fill(100)(
@@ -31,10 +31,11 @@ object Main extends IOApp {
                 .flatten
             )
           )
-        ).compile.drain
-      }
+          .metered(100.millis)
+          .through(led)
+          .compile
+          .drain
+      )
       .as(ExitCode.Success)
-
-  }
 
 }
