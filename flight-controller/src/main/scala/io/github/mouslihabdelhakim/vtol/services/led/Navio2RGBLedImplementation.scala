@@ -37,8 +37,9 @@ class Navio2RGBLedImplementation[F[_]](
       ledPath: Path,
       colors: Stream[F, Color]
   ): Stream[F, Unit] = {
-    colors.changes
+    colors
       .flatMap(c => toSingleLedState(c).representation)
+      .changes
       .through(
         writeAll(
           ledPath,
