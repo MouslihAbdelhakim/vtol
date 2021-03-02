@@ -38,6 +38,14 @@ object Navio2RGBLed {
     redStream.merge(greenStream).merge(blueStream)
   }
 
+  def make[F[_]](
+      blockingExecutionContext: Blocker
+  )(implicit
+      C: Concurrent[F],
+      CS: ContextShift[F],
+      T: Timer[F]
+  ): F[Navio2RGBLed[F]] = Navio2RGBLedImplementation(blockingExecutionContext)
+
   sealed abstract class LedState(
       val representation: Stream[Pure, Byte]
   )
