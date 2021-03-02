@@ -12,7 +12,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "build.sbt" }}
-      - run: cat /dev/null | sbt validate
+      - run: cat /dev/null | sbt build
       - save_cache:
           paths:
             - ~/.m2

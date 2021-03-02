@@ -60,6 +60,11 @@ lazy val commonSettings = Seq(
   scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-warnings")
 )
 
+lazy val buildSettings = Seq(
+  assemblyOutputPath in assembly := file("./bin/vtol-flight-control.jar"),
+  mainClass in assembly := Some("io.github.mouslihabdelhakim.vtol.Main")
+)
+
 lazy val D = new {
   lazy val Version = new {
     val fs2 = "2.5.0"
@@ -81,6 +86,7 @@ lazy val `flight-controller` = Project(
   base = file("./flight-controller")
 ).settings(moduleName := "flight-controller")
   .settings(commonSettings)
+  .settings(buildSettings)
   .settings(
     libraryDependencies ++= Seq(
       D.fs2,
@@ -89,3 +95,4 @@ lazy val `flight-controller` = Project(
   )
 
 addCommandAlias("validate", ";scalafmtCheck;scalafmtSbtCheck;test")
+addCommandAlias("build", ";clean;validate;assembly")
