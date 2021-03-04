@@ -1,4 +1,4 @@
-package io.github.mouslihabdelhakim.vtol.services.led
+package io.github.mouslihabdelhakim.vtol.services.navio2.led
 
 import cats.Eq
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
@@ -9,9 +9,9 @@ import fs2.{Pipe, Pure, Stream}
 
 import java.nio.file.{Path, Paths, StandardOpenOption}
 
-object Navio2RGBLed {
+object RGB {
 
-  def apply[F[_]](implicit
+  def acquire[F[_]](implicit
       C: Concurrent[F],
       CS: ContextShift[F]
   ): Resource[F, Pipe[F, Color, Unit]] =
