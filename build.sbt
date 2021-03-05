@@ -68,10 +68,12 @@ lazy val buildSettings = Seq(
 lazy val D = new {
   lazy val Version = new {
     val fs2 = "2.5.0"
+    val p4j = "1.4"
   }
 
-  val fs2   = "co.fs2" %% "fs2-core" % Version.fs2
-  val fs2io = "co.fs2" %% "fs2-io"   % Version.fs2
+  val fs2   = "co.fs2"  %% "fs2-core"  % Version.fs2
+  val fs2io = "co.fs2"  %% "fs2-io"    % Version.fs2
+  val p4j   = "com.pi4j" % "pi4j-core" % Version.p4j
 }
 
 lazy val vtol = Project(
@@ -90,7 +92,8 @@ lazy val `flight-controller` = Project(
   .settings(
     libraryDependencies ++= Seq(
       D.fs2,
-      D.fs2io
+      D.fs2io,
+      D.p4j
     )
   )
 

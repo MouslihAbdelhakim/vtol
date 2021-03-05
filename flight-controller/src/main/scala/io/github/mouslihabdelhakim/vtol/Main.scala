@@ -1,15 +1,18 @@
 package io.github.mouslihabdelhakim.vtol
 
+import cats.syntax.parallel._
+
 import cats.effect.{ExitCode, IO, IOApp}
 import fs2.Stream
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611
 import io.github.mouslihabdelhakim.vtol.services.navio2.led.RGB
 
 import scala.concurrent.duration._
 
 object Main extends IOApp {
 
-  override def run(args: List[String]): IO[ExitCode] =
-    RGB
+  override def run(args: List[String]): IO[ExitCode] = {
+    val rgpStream = RGB
       .acquire[IO]
       .use(led =>
         Stream
@@ -36,6 +39,14 @@ object Main extends IOApp {
           .compile
           .drain
       )
-      .as(ExitCode.Success)
+
+    val barometer = MS5611[IO]
+      .flatMap(_.reset())
+
+    List(
+      barometer,
+      rgpStream
+    ).parSequence.as(ExitCode.Success)
+  }
 
 }
