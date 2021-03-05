@@ -4,7 +4,7 @@ import cats.syntax.functor._
 
 import cats.effect.Sync
 import com.pi4j.io.spi.{SpiChannel, SpiDevice, SpiFactory}
-import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation.Command._
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation._
 
 class Implementation[F[_]](
     spiDevice: SpiDevice
@@ -13,7 +13,7 @@ class Implementation[F[_]](
 ) extends MS5611[F] {
 
   override def reset(): F[Unit] = S.delay {
-    spiDevice.write(Reset.value: _*)
+    spiDevice.write(Reset: _*)
   }.void
 
 }
@@ -32,11 +32,6 @@ object Implementation {
     )
   }
 
-  sealed abstract class Command(val value: Array[Byte])
-
-  object Command {
-
-    case object Reset extends Command(Array(0x1e, 0x00, 0x00, 0x00))
-  }
+  private val Reset    = Array[Byte](0x1e, 0x00, 0x00, 0x00)
 
 }
