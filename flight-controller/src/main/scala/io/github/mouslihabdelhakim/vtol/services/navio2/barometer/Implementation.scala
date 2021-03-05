@@ -1,10 +1,12 @@
 package io.github.mouslihabdelhakim.vtol.services.navio2.barometer
 
 import cats.syntax.functor._
+import cats.syntax.flatMap._
 
 import cats.effect.Sync
 import com.pi4j.io.spi.{SpiChannel, SpiDevice, SpiFactory}
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation._
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611.CalibrationData
 
 class Implementation[F[_]](
     spiDevice: SpiDevice
@@ -15,6 +17,23 @@ class Implementation[F[_]](
   override def reset(): F[Unit] = S.delay {
     spiDevice.write(Reset: _*)
   }.void
+
+  override def promRead(): F[CalibrationData] =
+    for {
+      c1 <- readLong(PromReadC1)
+      c2 <- readLong(PromReadC2)
+      c3 <- readLong(PromReadC3)
+      c4 <- readLong(PromReadC4)
+      c5 <- readLong(PromReadC5)
+      c6 <- readLong(PromReadC6)
+    } yield CalibrationData(c1, c2, c3, c4, c5, c6)
+
+  private def readLong(data: Array[Byte]): F[Long] =
+    S.delay {
+      val response = spiDevice.write(data: _*).drop(1)
+      println(response.mkString)
+      response(0) * 256L + response(1)
+    }
 
 }
 
@@ -32,6 +51,12 @@ object Implementation {
     )
   }
 
-  private val Reset    = Array[Byte](0x1e, 0x00, 0x00, 0x00)
+  private val Reset: Array[Byte]      = Array(0x1e, 0x00, 0x00, 0x00).map(_.toByte)
+  private val PromReadC1: Array[Byte] = Array(0xa2, 0x00, 0x00, 0x00).map(_.toByte)
+  private val PromReadC2: Array[Byte] = Array(0xa4, 0x00, 0x00, 0x00).map(_.toByte)
+  private val PromReadC3: Array[Byte] = Array(0xa6, 0x00, 0x00, 0x00).map(_.toByte)
+  private val PromReadC4: Array[Byte] = Array(0xa8, 0x00, 0x00, 0x00).map(_.toByte)
+  private val PromReadC5: Array[Byte] = Array(0xaa, 0x00, 0x00, 0x00).map(_.toByte)
+  private val PromReadC6: Array[Byte] = Array(0xac, 0x00, 0x00, 0x00).map(_.toByte)
 
 }

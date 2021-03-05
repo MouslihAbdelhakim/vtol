@@ -1,6 +1,7 @@
 package io.github.mouslihabdelhakim.vtol
 
 import cats.syntax.parallel._
+//import cats.syntax.flatMap._
 
 import cats.effect.{ExitCode, IO, IOApp}
 import fs2.Stream
@@ -41,7 +42,9 @@ object Main extends IOApp {
       )
 
     val barometer = MS5611[IO]
-      .flatMap(_.reset())
+      //.flatTap(_.reset())
+      .flatMap(_.promRead())
+      .map(println)
 
     List(
       barometer,
