@@ -26,18 +26,28 @@ class Implementation[F[_]](
     c6 <- readTwoByteRegister(PromReadC6)
   } yield CalibrationData(c1, c2, c3, c4, c5, c6)
 
+  override def digitalPressure(): F[Long] = for {
+    _ <- send(ConvertD1OSR4096)
+    d1 <- readThreeByteRegister(ADCRead)
+  } yield d1
+
   def send(command: Byte): F[Unit] =
     for {
       _ <- S.delay(i2CDevice.write(command))
       _ <- T.sleep(10.milliseconds)
     } yield ()
+
   private def readTwoByteRegister(register: Int): F[Long] = S.delay {
     val buffer = Array.ofDim[Byte](2)
     i2CDevice.read(register, buffer, 0, 2)
     (buffer(0) & 0xffL) * 256L + (buffer(1) & 0xffL)
   }
 
-  def refreshAndReadPressureConversion(): F[Long] =
+  private def readThreeByteRegister(register: Int): F[Long] = S.delay {
+    val buffer = Array.ofDim[Byte](3)
+    i2CDevice.read(register, buffer, 0, 3)
+    ((buffer(0) & 0xff) * 65536) + ((buffer(1) & 0xffL) * 256L) + (buffer(2) & 0xffL)
+  }
 
 }
 
@@ -60,12 +70,17 @@ object Implementation {
     )
   }
 
-  private val Reset      = 0x1e.toByte
+  // commands
+  private val Reset            = 0x1e.toByte
+  private val ConvertD1OSR4096 = 0x48.toByte
+
+  // registers
   private val PromReadC1 = 0xa2
   private val PromReadC2 = 0xa4
   private val PromReadC3 = 0xa6
   private val PromReadC4 = 0xa8
   private val PromReadC5 = 0xaa
   private val PromReadC6 = 0xac
+  private val ADCRead    = 0x00
 
 }
