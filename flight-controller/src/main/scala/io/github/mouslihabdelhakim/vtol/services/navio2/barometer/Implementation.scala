@@ -29,7 +29,7 @@ class Implementation[F[_]](
   def send(command: Byte): F[Unit] =
     for {
       _ <- S.delay(i2CDevice.write(command))
-      _ <- T.sleep(100.milliseconds)
+      _ <- T.sleep(10.milliseconds)
     } yield ()
   private def readTwoByteRegister(register: Int): F[Long] = S.delay {
     val buffer = Array.ofDim[Byte](2)
