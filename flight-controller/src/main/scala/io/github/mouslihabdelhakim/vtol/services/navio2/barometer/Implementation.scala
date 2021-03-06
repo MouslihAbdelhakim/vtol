@@ -15,10 +15,7 @@ class Implementation[F[_]](
     T: Timer[F]
 ) extends MS5611[F] {
 
-  override def reset(): F[Unit] = for {
-    _ <- S.delay(i2CDevice.write(Reset))
-    _ <- T.sleep(100.milliseconds)
-  } yield ()
+  override def reset(): F[Unit] = send(Reset)
 
   override def calibration(): F[CalibrationData] = for {
     c1 <- readTwoByteRegister(PromReadC1)
@@ -29,6 +26,11 @@ class Implementation[F[_]](
     c6 <- readTwoByteRegister(PromReadC6)
   } yield CalibrationData(c1, c2, c3, c4, c5, c6)
 
+  def send(command: Byte): F[Unit] =
+    for {
+      _ <- S.delay(i2CDevice.write(command))
+      _ <- T.sleep(100.milliseconds)
+    } yield ()
   private def readTwoByteRegister(register: Int): F[Long] = S.delay {
     val buffer = Array.ofDim[Byte](2)
     i2CDevice.read(register, buffer, 0, 2)
