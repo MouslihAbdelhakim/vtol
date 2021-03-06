@@ -20,7 +20,7 @@ object Main extends IOApp {
           .evals(
             IO.pure(
               List
-                .fill(100)(
+                .fill(10)(
                   List(
                     RGB.Color.Black,
                     RGB.Color.Red,
