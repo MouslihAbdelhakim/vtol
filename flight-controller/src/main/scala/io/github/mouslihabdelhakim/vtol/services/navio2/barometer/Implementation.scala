@@ -20,7 +20,7 @@ class Implementation[F[_]](
     _ <- T.sleep(100.milliseconds)
   } yield ()
 
-  override def promRead(): F[CalibrationData] = for {
+  override def calibration(): F[CalibrationData] = for {
     c1 <- readPromRegister(PromReadC1)
     c2 <- readPromRegister(PromReadC2)
     c3 <- readPromRegister(PromReadC3)

@@ -43,7 +43,7 @@ object Main extends IOApp {
 
     val barometer = MS5611[IO]
       .flatTap(_.reset())
-      .flatMap(_.promRead())
+      .flatMap(_.calibration())
       .map(println)
 
     List(

@@ -7,7 +7,7 @@ trait MS5611[F[_]] {
 
   def reset(): F[Unit]
 
-  def promRead(): F[CalibrationData]
+  def calibration(): F[CalibrationData]
 
 }
 
