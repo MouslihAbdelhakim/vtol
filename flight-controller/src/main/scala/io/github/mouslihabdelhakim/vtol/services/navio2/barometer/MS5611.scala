@@ -9,6 +9,7 @@ trait MS5611[F[_]] {
 
   def calibration(): F[CalibrationData]
 
+  def digitalPressure(): F[Long]
 }
 
 object MS5611 {
