@@ -21,19 +21,21 @@ class Implementation[F[_]](
   } yield ()
 
   override def calibration(): F[CalibrationData] = for {
-    c1 <- readPromRegister(PromReadC1)
-    c2 <- readPromRegister(PromReadC2)
-    c3 <- readPromRegister(PromReadC3)
-    c4 <- readPromRegister(PromReadC4)
-    c5 <- readPromRegister(PromReadC5)
-    c6 <- readPromRegister(PromReadC6)
+    c1 <- readTwoByteRegister(PromReadC1)
+    c2 <- readTwoByteRegister(PromReadC2)
+    c3 <- readTwoByteRegister(PromReadC3)
+    c4 <- readTwoByteRegister(PromReadC4)
+    c5 <- readTwoByteRegister(PromReadC5)
+    c6 <- readTwoByteRegister(PromReadC6)
   } yield CalibrationData(c1, c2, c3, c4, c5, c6)
 
-  private def readPromRegister(register: Int): F[Long] = S.delay {
+  private def readTwoByteRegister(register: Int): F[Long] = S.delay {
     val buffer = Array.ofDim[Byte](2)
     i2CDevice.read(register, buffer, 0, 2)
     (buffer(0) & 0xffL) * 256L + (buffer(1) & 0xffL)
   }
+
+  def refreshAndReadPressureConversion(): F[Long] =
 
 }
 
