@@ -5,7 +5,7 @@ import cats.syntax.functor._
 import cats.syntax.flatMap._
 import cats.effect.{Sync, Timer}
 import com.pi4j.io.i2c.{I2CBus, I2CDevice, I2CFactory}
-import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation.{PromReadC1, Reset}
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation._
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611.CalibrationData
 
 class Implementation[F[_]](
@@ -20,14 +20,19 @@ class Implementation[F[_]](
     _ <- T.sleep(100.milliseconds)
   } yield ()
 
-  override def promRead(): F[CalibrationData] =
-    read2Bytes(PromReadC1).map(_ => CalibrationData(0, 0, 0, 0, 0, 0))
+  override def calibration(): F[CalibrationData] = for {
+    c1 <- readPromRegister(PromReadC1)
+    c2 <- readPromRegister(PromReadC2)
+    c3 <- readPromRegister(PromReadC3)
+    c4 <- readPromRegister(PromReadC4)
+    c5 <- readPromRegister(PromReadC5)
+    c6 <- readPromRegister(PromReadC6)
+  } yield CalibrationData(c1, c2, c3, c4, c5, c6)
 
-  private def read2Bytes(register: Int): F[Array[Byte]] = S.delay {
+  private def readPromRegister(register: Int): F[Long] = S.delay {
     val buffer = Array.ofDim[Byte](2)
     i2CDevice.read(register, buffer, 0, 2)
-    println(buffer.mkString)
-    buffer
+    (buffer(0) & 0xffL) * 256L + (buffer(1) & 0xffL)
   }
 
 }
@@ -53,10 +58,10 @@ object Implementation {
 
   private val Reset      = 0x1e.toByte
   private val PromReadC1 = 0xa2
-  /*private val PromReadC2 = 0xa4.toByte
-  private val PromReadC3 = 0xa6.toByte
-  private val PromReadC4 = 0xa8.toByte
-  private val PromReadC5 = 0xaa.toByte
-  private val PromReadC6 = 0xac.toByte
-   */
+  private val PromReadC2 = 0xa4
+  private val PromReadC3 = 0xa6
+  private val PromReadC4 = 0xa8
+  private val PromReadC5 = 0xaa
+  private val PromReadC6 = 0xac
+
 }
