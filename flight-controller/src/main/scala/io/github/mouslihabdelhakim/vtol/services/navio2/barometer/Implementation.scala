@@ -1,42 +1,45 @@
 package io.github.mouslihabdelhakim.vtol.services.navio2.barometer
 
+import scala.concurrent.duration._
 import cats.syntax.functor._
-
-import cats.effect.Sync
-import com.pi4j.io.spi.{SpiChannel, SpiDevice, SpiFactory}
-import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation.Command._
+import cats.syntax.flatMap._
+import cats.effect.{Sync, Timer}
+import com.pi4j.io.i2c.{I2CBus, I2CDevice, I2CFactory}
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation.Reset
 
 class Implementation[F[_]](
-    spiDevice: SpiDevice
+    i2CDevice: I2CDevice
 )(implicit
-    S: Sync[F]
+    S: Sync[F],
+    T: Timer[F]
 ) extends MS5611[F] {
 
-  override def reset(): F[Unit] = S.delay {
-    spiDevice.write(Reset.value: _*)
-  }.void
+  override def reset(): F[Unit] = for {
+    _ <- S.delay(i2CDevice.write(Reset))
+    _ <- T.sleep(100.milliseconds)
+  } yield ()
 
 }
 
 object Implementation {
 
-  def apply[F[_]](implicit S: Sync[F]): F[MS5611[F]] = {
+  def apply[F[_]](implicit
+      S: Sync[F],
+      T: Timer[F]
+  ): F[MS5611[F]] = {
     S.delay(
       new Implementation[F](
-        SpiFactory.getInstance(
-          SpiChannel.CS0, // https://github.com/emlid/Navio2/blob/0eb90b7d0ace9b88f886f3482c4f275b0a34efe8/Python/navio/ms5611.py#L103
-          SpiDevice.DEFAULT_SPI_SPEED, // https://github.com/emlid/Navio2/blob/0eb90b7d0ace9b88f886f3482c4f275b0a34efe8/Python/navio/ms5611.py#L45
-          SpiDevice.DEFAULT_SPI_MODE // page 6 in https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7FMS5611-01BA03%7FB%7Fpdf%7FEnglish%7FENG_DS_MS5611-01BA03_B.pdf%7FCAT-BLPS0036
-        )
+        I2CFactory
+          .getInstance(
+            I2CBus.BUS_1
+          )
+          .getDevice(
+            0x76 // address
+          )
       )
     )
   }
 
-  sealed abstract class Command(val value: Array[Byte])
-
-  object Command {
-
-    case object Reset extends Command(Array(0x1e, 0x00, 0x00, 0x00))
-  }
+  private val Reset = 0x1e.toByte
 
 }
