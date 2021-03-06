@@ -31,7 +31,12 @@ class Implementation[F[_]](
     d1 <- readThreeByteRegister(ADCRead)
   } yield d1
 
-  def send(command: Byte): F[Unit] =
+  override def digitalTemperature(): F[Long] = for {
+    _ <- send(ConvertD2OSR4096)
+    d1 <- readThreeByteRegister(ADCRead)
+  } yield d1
+
+  private def send(command: Byte): F[Unit] =
     for {
       _ <- S.delay(i2CDevice.write(command))
       _ <- T.sleep(10.milliseconds)
@@ -73,6 +78,7 @@ object Implementation {
   // commands
   private val Reset            = 0x1e.toByte
   private val ConvertD1OSR4096 = 0x48.toByte
+  private val ConvertD2OSR4096 = 0x58.toByte
 
   // registers
   private val PromReadC1 = 0xa2

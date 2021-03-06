@@ -45,6 +45,7 @@ object Main extends IOApp {
       .flatTap(_.reset())
       .flatTap(_.calibration().map(println))
       .flatTap(_.digitalPressure().map(println))
+      .flatTap(_.digitalTemperature().map(println))
 
     List(
       barometer,
