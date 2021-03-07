@@ -68,7 +68,7 @@ class I2CBasedImplementation[F[_]](
 
     BarometricPressure(
       sensorTemperatureInMilliC = TEMP,
-      pressureInMilliBar = P
+      pressureInNanoBar = P * 10
     )
 
   }
@@ -76,7 +76,7 @@ class I2CBasedImplementation[F[_]](
   private def send(command: Byte): F[Unit] =
     for {
       _ <- S.delay(i2CDevice.write(command))
-      _ <- T.sleep(10.milliseconds)
+      _ <- T.sleep(9.milliseconds) // the sensor takes 2.8ms to reload and 8.22ms to do ADC CONVERSION
     } yield ()
 
   private def readTwoByteRegister(register: Int): F[Long] = S.delay {

@@ -40,7 +40,7 @@ object Main extends IOApp {
       )
 
     val barometer = MS5611
-      .stream[IO](1.second)
+      .stream[IO](20.milliseconds) // hopefully we can have a 50hz loop
       .map(println)
       .compile
       .drain
