@@ -1,9 +1,7 @@
 package io.github.mouslihabdelhakim.vtol
 
-import cats.syntax.parallel._
-import cats.syntax.flatMap._
-
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.syntax.parallel._
 import fs2.Stream
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611
 import io.github.mouslihabdelhakim.vtol.services.navio2.led.RGB
@@ -41,11 +39,11 @@ object Main extends IOApp {
           .drain
       )
 
-    val barometer = MS5611[IO]
-      .flatTap(_.reset())
-      .flatTap(_.calibration().map(println))
-      .flatTap(_.digitalPressure().map(println))
-      .flatTap(_.digitalTemperature().map(println))
+    val barometer = MS5611
+      .stream[IO](20.milliseconds) // hopefully we can have a 50hz loop
+      .map(println)
+      .compile
+      .drain
 
     List(
       barometer,
