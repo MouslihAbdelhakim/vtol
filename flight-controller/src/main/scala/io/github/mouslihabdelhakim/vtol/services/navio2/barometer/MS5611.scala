@@ -27,17 +27,17 @@ object MS5611 {
       S: Sync[F],
       T: Timer[F]
   ): Stream[F, BarometricPressure] = for {
-    impl <- Stream.eval(apply[F])
+    impl <- Stream.eval(i2c[F])
     calibrationData <- Stream.eval(impl.calibration())
     barometricPressure <- Stream
                             .repeatEval(impl.barometricPressure(calibrationData))
                             .metered(sampleEvery)
   } yield barometricPressure
 
-  def apply[F[_]](implicit
+  def i2c[F[_]](implicit
       S: Sync[F],
       T: Timer[F]
-  ): F[MS5611[F]] = Implementation[F]
+  ): F[MS5611[F]] = I2CBasedImplementation[F]
 
   case class CalibrationData(
       C1: Long, // Pressure sensitivity

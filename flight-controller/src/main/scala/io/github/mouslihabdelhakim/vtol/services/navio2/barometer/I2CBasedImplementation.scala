@@ -5,10 +5,10 @@ import cats.syntax.functor._
 import cats.syntax.flatMap._
 import cats.effect.{Sync, Timer}
 import com.pi4j.io.i2c.{I2CBus, I2CDevice, I2CFactory}
-import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation._
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.I2CBasedImplementation._
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611.{BarometricPressure, CalibrationData}
 
-class Implementation[F[_]](
+class I2CBasedImplementation[F[_]](
     i2CDevice: I2CDevice
 )(implicit
     S: Sync[F],
@@ -93,14 +93,14 @@ class Implementation[F[_]](
 
 }
 
-object Implementation {
+object I2CBasedImplementation {
 
   def apply[F[_]](implicit
       S: Sync[F],
       T: Timer[F]
   ): F[MS5611[F]] = {
     S.delay(
-      new Implementation[F](
+      new I2CBasedImplementation[F](
         I2CFactory
           .getInstance(
             I2CBus.BUS_1

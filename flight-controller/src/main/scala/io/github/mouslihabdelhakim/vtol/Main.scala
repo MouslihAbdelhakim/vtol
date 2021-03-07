@@ -41,7 +41,8 @@ object Main extends IOApp {
           .drain
       )
 
-    val barometer = MS5611[IO]
+    val barometer = MS5611
+      .i2c[IO]
       .flatTap(_.reset())
       .flatTap(_.calibration().map(println))
       .flatTap(_.digitalPressure().map(println))
