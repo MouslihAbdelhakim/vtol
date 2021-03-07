@@ -44,23 +44,24 @@ class Implementation[F[_]](
   } yield {
     import calibrationData._
 
-    // Calculate second order temperature
-    val dT = d2 - C5 * 256
+    val dT             = d2 - C5 * `2_8`
+    val firstOrderTEMP = 2000L + dT * C6 / `2_23`
 
-    val firstOrderTEMP         = 2000L + dT * C6 / 8388608L
     val lessThan20cCoefficient = if (firstOrderTEMP < 2000) 1 else 0
-    val lessThan15cCoefficient = if (firstOrderTEMP < 1500) 1 else 0
+    val lessThan15cCoefficient = if (firstOrderTEMP < -1500) 1 else 0
 
-    val TEMP = firstOrderTEMP - (lessThan20cCoefficient * (dT * dT) / `2_31`)
+    val TEMP = firstOrderTEMP - (
+      lessThan20cCoefficient * (dT * dT) / `2_31`
+    )
 
     val OFF = C2 * `2_16` + (C4 * dT) / `2_7` - (
-      (lessThan20cCoefficient * (5 * ((firstOrderTEMP - 2000) * (firstOrderTEMP - 2000)) / 2)) +
-        (lessThan15cCoefficient * (7 * (firstOrderTEMP + 1500) * (firstOrderTEMP + 1500)))
+      (lessThan20cCoefficient * (5L * ((firstOrderTEMP - 2000L) * (firstOrderTEMP - 2000L)) / 2L)) +
+        (lessThan15cCoefficient * (7L * (firstOrderTEMP + 1500L) * (firstOrderTEMP + 1500L)))
     )
 
     val SENS = C1 * `2_15` + (C3 * dT) / `2_8` - (
-      (lessThan20cCoefficient * (5 * ((firstOrderTEMP - 2000) * (firstOrderTEMP - 2000)) / (2 * 2))) +
-        (lessThan15cCoefficient * (11 * ((firstOrderTEMP + 155) * (firstOrderTEMP + 155)) / 2))
+      (lessThan20cCoefficient * (5L * ((firstOrderTEMP - 2000L) * (firstOrderTEMP - 2000L)) / `2_2`)) +
+        (lessThan15cCoefficient * (11L * ((firstOrderTEMP + 1500L) * (firstOrderTEMP + 1500L)) / 2L))
     )
 
     val P = (d1 * SENS / `2_21` - OFF) / `2_15`
@@ -125,11 +126,13 @@ object Implementation {
   private val PromReadC6 = 0xac
   private val ADCRead    = 0x00
 
+  private val `2_2`  = 4L
   private val `2_7`  = 128L
   private val `2_8`  = 256L
   private val `2_15` = 32768L
   private val `2_16` = 65536L
   private val `2_21` = 2097152L
+  private val `2_23` = 8388608L
   private val `2_31` = 2147483648L
 
 }
