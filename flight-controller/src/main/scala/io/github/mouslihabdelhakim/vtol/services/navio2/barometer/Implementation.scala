@@ -51,16 +51,7 @@ class Implementation[F[_]](
     val lessThan20cCoefficient = if (firstOrderTEMP < 2000) 1 else 0
     val lessThan15cCoefficient = if (firstOrderTEMP < 1500) 1 else 0
 
-    def twoToThePower(a: Int): Long = 2L << (a - 1)
-
-    val `2_23` = twoToThePower(23)
-    val `2_16` = twoToThePower(16)
-    val `2_7`  = twoToThePower(7)
-    val `2_15` = twoToThePower(15)
-    val `2_8`  = twoToThePower(8)
-    val `2_21` = twoToThePower(21)
-
-    val TEMP = firstOrderTEMP - (lessThan20cCoefficient * (dT * dT) / `2_23`)
+    val TEMP = firstOrderTEMP - (lessThan20cCoefficient * (dT * dT) / `2_31`)
 
     val OFF = C2 * `2_16` + (C4 * dT) / `2_7` - (
       (lessThan20cCoefficient * (5 * ((firstOrderTEMP - 2000) * (firstOrderTEMP - 2000)) / 2)) +
@@ -133,5 +124,12 @@ object Implementation {
   private val PromReadC5 = 0xaa
   private val PromReadC6 = 0xac
   private val ADCRead    = 0x00
+
+  private val `2_7`  = 128L
+  private val `2_8`  = 256L
+  private val `2_15` = 32768L
+  private val `2_16` = 65536L
+  private val `2_21` = 2097152L
+  private val `2_31` = 2147483648L
 
 }
