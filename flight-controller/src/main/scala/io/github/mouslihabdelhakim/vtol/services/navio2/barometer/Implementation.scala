@@ -6,7 +6,7 @@ import cats.syntax.flatMap._
 import cats.effect.{Sync, Timer}
 import com.pi4j.io.i2c.{I2CBus, I2CDevice, I2CFactory}
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.Implementation._
-import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611.CalibrationData
+import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611.{BarometricPressure, CalibrationData}
 
 class Implementation[F[_]](
     i2CDevice: I2CDevice
@@ -35,6 +35,51 @@ class Implementation[F[_]](
     _ <- send(ConvertD2OSR4096)
     d1 <- readThreeByteRegister(ADCRead)
   } yield d1
+
+  override def barometricPressure(
+      calibrationData: CalibrationData
+  ): F[BarometricPressure] = for {
+    d1 <- digitalPressure()
+    d2 <- digitalTemperature()
+  } yield {
+    import calibrationData._
+
+    // Calculate second order temperature
+    val dT = d2 - C5 * 256
+
+    val firstOrderTEMP         = 2000L + dT * C6 / 8388608L
+    val lessThan20cCoefficient = if (firstOrderTEMP < 2000) 1 else 0
+    val lessThan15cCoefficient = if (firstOrderTEMP < 1500) 1 else 0
+
+    def twoToThePower(a: Int): Long = 2L << (a - 1)
+
+    val `2_23` = twoToThePower(23)
+    val `2_16` = twoToThePower(16)
+    val `2_7`  = twoToThePower(7)
+    val `2_15` = twoToThePower(15)
+    val `2_8`  = twoToThePower(8)
+    val `2_21` = twoToThePower(21)
+
+    val TEMP = firstOrderTEMP - (lessThan20cCoefficient * (dT * dT) / `2_23`)
+
+    val OFF = C2 * `2_16` + (C4 * dT) / `2_7` - (
+      (lessThan20cCoefficient * (5 * ((firstOrderTEMP - 2000) * (firstOrderTEMP - 2000)) / 2)) +
+        (lessThan15cCoefficient * (7 * (firstOrderTEMP + 1500) * (firstOrderTEMP + 1500)))
+    )
+
+    val SENS = C1 * `2_15` + (C3 * dT) / `2_8` - (
+      (lessThan20cCoefficient * (5 * ((firstOrderTEMP - 2000) * (firstOrderTEMP - 2000)) / (2 * 2))) +
+        (lessThan15cCoefficient * (11 * ((firstOrderTEMP + 155) * (firstOrderTEMP + 155)) / 2))
+    )
+
+    val P = (d1 * SENS / `2_21` - OFF) / `2_15`
+
+    BarometricPressure(
+      sensorTemperatureInMilliC = TEMP,
+      pressureInMilliBar = P
+    )
+
+  }
 
   private def send(command: Byte): F[Unit] =
     for {
