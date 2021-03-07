@@ -1,7 +1,10 @@
 package io.github.mouslihabdelhakim.vtol.services.navio2.barometer
 
+import fs2.Stream
 import cats.effect.{Sync, Timer}
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611.{BarometricPressure, CalibrationData}
+
+import scala.concurrent.duration.FiniteDuration
 
 trait MS5611[F[_]] {
 
@@ -17,6 +20,19 @@ trait MS5611[F[_]] {
 }
 
 object MS5611 {
+
+  def stream[F[_]](
+      sampleEvery: FiniteDuration
+  )(implicit
+      S: Sync[F],
+      T: Timer[F]
+  ): Stream[F, BarometricPressure] = for {
+    impl <- Stream.eval(apply[F])
+    calibrationData <- Stream.eval(impl.calibration())
+    barometricPressure <- Stream
+                            .repeatEval(impl.barometricPressure(calibrationData))
+                            .metered(sampleEvery)
+  } yield barometricPressure
 
   def apply[F[_]](implicit
       S: Sync[F],
