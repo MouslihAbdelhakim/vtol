@@ -51,7 +51,7 @@ object MS5611 {
 
   case class BarometricPressure(
       sensorTemperatureInMilliC: Long,
-      pressureInNanoBar: Long
+      pressureInMicroBar: Long
   )
 
 }

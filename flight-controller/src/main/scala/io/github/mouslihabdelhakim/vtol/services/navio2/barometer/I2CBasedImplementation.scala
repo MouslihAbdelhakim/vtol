@@ -68,7 +68,7 @@ class I2CBasedImplementation[F[_]](
 
     BarometricPressure(
       sensorTemperatureInMilliC = TEMP,
-      pressureInNanoBar = P * 10
+      pressureInMicroBar = P * 10
     )
 
   }
