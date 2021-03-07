@@ -28,6 +28,7 @@ object MS5611 {
       T: Timer[F]
   ): Stream[F, BarometricPressure] = for {
     impl <- Stream.eval(i2c[F])
+    _ <- Stream.eval(impl.reset())
     calibrationData <- Stream.eval(impl.calibration())
     barometricPressure <- Stream
                             .repeatEval(impl.barometricPressure(calibrationData))
