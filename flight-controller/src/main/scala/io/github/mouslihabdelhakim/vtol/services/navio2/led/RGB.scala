@@ -48,7 +48,9 @@ object RGB {
     implicit val eq: Eq[LedState] = Eq.fromUniversalEquals[LedState]
   }
 
-  sealed abstract class Color(val red: LedState, val green: LedState, val blue: LedState) extends Product with Serializable
+  sealed abstract class Color(val red: LedState, val green: LedState, val blue: LedState)
+      extends Product
+      with Serializable
 
   object Color {
     import LedState._

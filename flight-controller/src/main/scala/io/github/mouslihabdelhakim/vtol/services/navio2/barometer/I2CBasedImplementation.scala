@@ -41,10 +41,12 @@ class I2CBasedImplementation[F[_]](
   ): F[BarometricPressure] = for {
     d1 <- digitalPressure()
     d2 <- digitalTemperature()
-  } yield {
+  } yield secondOrderTemperatureCompensation(calibrationData, d1, d2)
+
+  private def secondOrderTemperatureCompensation(calibrationData: CalibrationData, D1: Long, D2: Long) = {
     import calibrationData._
 
-    val dT             = d2 - C5 * `2_8`
+    val dT             = D2 - C5 * `2_8`
     val firstOrderTEMP = 2000L + dT * C6 / `2_23`
 
     val lessThan20cCoefficient = if (firstOrderTEMP < 2000) 1 else 0
@@ -64,7 +66,7 @@ class I2CBasedImplementation[F[_]](
         (lessThan15cCoefficient * (11L * ((firstOrderTEMP + 1500L) * (firstOrderTEMP + 1500L)) / 2L))
     )
 
-    val P = (d1 * SENS / `2_21` - OFF) / `2_15`
+    val P = (D1 * SENS / `2_21` - OFF) / `2_15`
 
     BarometricPressure(
       sensorTemperatureInMilliC = TEMP,
