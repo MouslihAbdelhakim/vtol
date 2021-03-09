@@ -45,54 +45,54 @@ class I2CBasedImplementationSpecs
       }
     }
 
-    "I2CBasedImplementation.digitalPressure" should {
+  }
 
-      "send 0x48 to the sensor" in {
-        val mockedI2CDevice = mock[I2CDevice]
+  "I2CBasedImplementation.digitalPressure" should {
 
-        new I2CBasedImplementation[IO](mockedI2CDevice).digitalPressure().map { pressure =>
-          mockedI2CDevice.write(0x48.toByte) was called
-          pressure shouldBe 0
-        }
+    "send 0x48 to the sensor" in {
+      val mockedI2CDevice = mock[I2CDevice]
+
+      new I2CBasedImplementation[IO](mockedI2CDevice).digitalPressure().map { pressure =>
+        mockedI2CDevice.write(0x48.toByte) was called
+        pressure shouldBe 0
       }
-
-      "read three bytes from 0x00 and convert it to long" in {
-        val mockedI2CDevice = i2cDeviceWith(
-          Map(
-            0x00 -> Array(0x95.toByte, 0xf7.toByte, 0xba.toByte) // 9828282
-          )
-        )
-
-        new I2CBasedImplementation[IO](mockedI2CDevice).digitalPressure().asserting {
-          _ shouldBe 9828282
-        }
-      }
-
     }
 
-    "I2CBasedImplementation.digitalTemperature" should {
-
-      "send 0x58 to the sensor" in {
-        val mockedI2CDevice = mock[I2CDevice]
-
-        new I2CBasedImplementation[IO](mockedI2CDevice).digitalTemperature().map { pressure =>
-          mockedI2CDevice.write(0x58.toByte) was called
-          pressure shouldBe 0
-        }
-      }
-
-      "read three bytes from 0x00 and convert it to long" in {
-        val mockedI2CDevice = i2cDeviceWith(
-          Map(
-            0x00 -> Array(0x95.toByte, 0xf7.toByte, 0xba.toByte) // 9828282
-          )
+    "read three bytes from 0x00 and convert it to long" in {
+      val mockedI2CDevice = i2cDeviceWith(
+        Map(
+          0x00 -> Array(0x95.toByte, 0xf7.toByte, 0xba.toByte) // 9828282
         )
+      )
 
-        new I2CBasedImplementation[IO](mockedI2CDevice).digitalTemperature().asserting {
-          _ shouldBe 9828282
-        }
+      new I2CBasedImplementation[IO](mockedI2CDevice).digitalPressure().asserting {
+        _ shouldBe 9828282
       }
+    }
 
+  }
+
+  "I2CBasedImplementation.digitalTemperature" should {
+
+    "send 0x58 to the sensor" in {
+      val mockedI2CDevice = mock[I2CDevice]
+
+      new I2CBasedImplementation[IO](mockedI2CDevice).digitalTemperature().map { pressure =>
+        mockedI2CDevice.write(0x58.toByte) was called
+        pressure shouldBe 0
+      }
+    }
+
+    "read three bytes from 0x00 and convert it to long" in {
+      val mockedI2CDevice = i2cDeviceWith(
+        Map(
+          0x00 -> Array(0x95.toByte, 0xf7.toByte, 0xba.toByte) // 9828282
+        )
+      )
+
+      new I2CBasedImplementation[IO](mockedI2CDevice).digitalTemperature().asserting {
+        _ shouldBe 9828282
+      }
     }
 
   }
