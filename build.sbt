@@ -67,13 +67,21 @@ lazy val buildSettings = Seq(
 
 lazy val D = new {
   lazy val Version = new {
-    val fs2 = "2.5.0"
-    val p4j = "1.4"
+    val fs2                 = "2.5.0"
+    val p4j                 = "1.4"
+    val scalaTest           = "3.2.5"
+    val scalaTestCatsEffect = "0.5.2"
+    val scalaTestMockito    = "1.16.29"
+
   }
 
   val fs2   = "co.fs2"  %% "fs2-core"  % Version.fs2
   val fs2io = "co.fs2"  %% "fs2-io"    % Version.fs2
   val p4j   = "com.pi4j" % "pi4j-core" % Version.p4j
+
+  val scalaTest           = "org.scalatest"  %% "scalatest"                     % Version.scalaTest           % "test"
+  val scalaTestCatsEffect = "com.codecommit" %% "cats-effect-testing-scalatest" % Version.scalaTestCatsEffect % "test"
+  val scalaTestMockito    = "org.mockito"     % "mockito-scala-scalatest_2.13"  % Version.scalaTestMockito    % "test"
 }
 
 lazy val vtol = Project(
@@ -93,7 +101,10 @@ lazy val `flight-controller` = Project(
     libraryDependencies ++= Seq(
       D.fs2,
       D.fs2io,
-      D.p4j
+      D.p4j,
+      D.scalaTestCatsEffect,
+      D.scalaTest,
+      D.scalaTestMockito
     )
   )
 
