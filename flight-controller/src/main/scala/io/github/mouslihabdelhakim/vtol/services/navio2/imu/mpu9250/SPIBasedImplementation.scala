@@ -28,12 +28,17 @@ object SPIBasedImplementation {
     S.delay {
       SpiFactory.getInstance(
         SpiChannel.CS1,
-        SpiDevice.DEFAULT_SPI_SPEED
+        SPISpeed
       )
     }.map(new SPIBasedImplementation[F](_))
 
-  private val Filler: Byte     = 0x00
-  private val ReadFlag: Byte   = 0x80.toByte
+  private val SPISpeed = 20000000 // 20Mhz
+
+  // Reading
+  private val ReadFlag: Byte = 0x80.toByte
+  private val Filler: Byte   = 0x00
+
+  // registers
   private val ReadWhoAmI: Byte = (0x75 | ReadFlag).toByte
 
 }
