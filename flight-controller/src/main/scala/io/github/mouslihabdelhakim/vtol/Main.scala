@@ -4,6 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.parallel._
 import fs2.Stream
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950
 import io.github.mouslihabdelhakim.vtol.services.navio2.led.RGB
 
 import scala.concurrent.duration._
@@ -40,14 +41,20 @@ object Main extends IOApp {
       )
 
     val barometer = MS5611
-      .stream[IO](20.milliseconds) // hopefully we can have a 50hz loop
+      .stream[IO](2000.milliseconds) // hopefully we can have a 50hz loop
       .map(println)
       .compile
       .drain
 
+    val imu = MPU2950
+      .spi[IO]
+      .flatMap(_.testConnection())
+      .map(result => println(s"mpu2950 test ${result}"))
+
     List(
       barometer,
-      rgpStream
+      rgpStream,
+      imu
     ).parSequence.as(ExitCode.Success)
   }
 
