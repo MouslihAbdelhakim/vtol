@@ -1,6 +1,7 @@
 package io.github.mouslihabdelhakim.vtol
 
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.syntax.flatMap._
 import cats.syntax.parallel._
 import fs2.Stream
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611
@@ -48,8 +49,8 @@ object Main extends IOApp {
 
     val imu = MPU2950
       .spi[IO]
-      .flatMap(_.testConnection())
-      .map(result => println(s"mpu2950 test ${result}"))
+      .flatTap(_.testConnection().map(result => println(s"mpu2950 test ${result}")))
+      .flatTap(_.reset())
 
     List(
       barometer,

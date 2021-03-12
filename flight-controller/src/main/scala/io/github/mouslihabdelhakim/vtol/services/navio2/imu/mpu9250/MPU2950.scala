@@ -6,6 +6,8 @@ trait MPU2950[F[_]] {
 
   def testConnection(): F[Boolean]
 
+  def reset(): F[Unit]
+
 }
 
 object MPU2950 {

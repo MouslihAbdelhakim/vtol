@@ -11,12 +11,13 @@ class SPIBasedImplementation[F[_]](
 ) extends MPU2950[F] {
   import SPIBasedImplementation._
 
-  override def testConnection(): F[Boolean] =
-    readASingleByte(ReadWhoAmI).map(_ == 0x71.toByte)
-
-  private def readASingleByte(register: Byte): F[Byte] = S.delay {
-    spiDevice.write(register, Filler)(1)
+  override def testConnection(): F[Boolean] = S.delay {
+    spiDevice.write(ReadWhoAmI, Filler)(1) == ExpectedWhoAmIResponse
   }
+
+  override def reset(): F[Unit] = S.delay {
+    spiDevice.write(PwrMgmt1, PwrMgmt1DeviceReset)
+  }.void
 
 }
 
@@ -34,11 +35,18 @@ object SPIBasedImplementation {
 
   private val SPISpeed = 20000000 // 20Mhz
 
+  // commands
+  private val PwrMgmt1DeviceReset = 0x80.toByte
+
   // Reading
   private val ReadFlag: Byte = 0x80.toByte
   private val Filler: Byte   = 0x00
 
   // registers
+  private val PwrMgmt1: Byte   = 0x6b.toByte
   private val ReadWhoAmI: Byte = (0x75 | ReadFlag).toByte
+
+  // expected response
+  private val ExpectedWhoAmIResponse = 0x71.toByte
 
 }
