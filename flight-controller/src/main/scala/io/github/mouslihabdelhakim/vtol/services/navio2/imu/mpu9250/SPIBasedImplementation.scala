@@ -12,11 +12,9 @@ class SPIBasedImplementation[F[_]](
   import SPIBasedImplementation._
 
   override def testConnection(): F[Boolean] =
-    readASingleByte(ReadWhoAmI).map(_ == 0x71.toByte)
-
-  private def readASingleByte(register: Byte): F[Byte] = S.delay {
-    spiDevice.write(register, Filler)(1)
-  }
+    S.delay {
+      spiDevice.write(ReadWhoAmI, Filler)(1) == ExpectedWhoAmIResponse
+    }
 
 }
 
@@ -40,5 +38,8 @@ object SPIBasedImplementation {
 
   // registers
   private val ReadWhoAmI: Byte = (0x75 | ReadFlag).toByte
+
+  // expected response
+  private val ExpectedWhoAmIResponse = 0x71.toByte
 
 }
