@@ -49,8 +49,7 @@ object Main extends IOApp {
 
     val imu = MPU2950
       .spi[IO]
-      .flatTap(_.testConnection().map(result => println(s"mpu2950 test ${result}")))
-      .flatTap(_.reset())
+      .flatTap(_.init())
 
     List(
       barometer,
