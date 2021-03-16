@@ -4,6 +4,8 @@ import cats.effect.{Sync, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.pi4j.io.spi.{SpiChannel, SpiDevice, SpiFactory}
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.{CalibrationData, ImuData}
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.ImuData._
 import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.SPIBasedImplementation.Register._
 
 import scala.concurrent.duration._
@@ -20,6 +22,27 @@ class SPIBasedImplementation[F[_]](
     _ <- testMPU2950Connection
     _ <- initMPU2950()
   } yield ()
+
+  override def read(calibrationData: CalibrationData): F[ImuData] =
+    readFrom(ACCEL_XOUT_H, 14).map { buffer =>
+      import calibrationData._
+      ImuData(
+        Accelerations(
+          xAxisInMeterPerSecondPerSecond =
+            ((buffer(0) & 0xffL) * 256 + (buffer(1) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider,
+          yAxisInMeterPerSecondPerSecond =
+            ((buffer(2) & 0xffL) * 256 + (buffer(3) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider,
+          zAxisInMeterPerSecondPerSecond =
+            ((buffer(4) & 0xffL) * 256 + (buffer(5) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider
+        ),
+        AngularRates(
+          pitchAxisInRadPerSecond = ((buffer(8) & 0xffL) * 256 + (buffer(9) & 0xff)) / angularRateDivider,
+          yawAxisInRadPerSecond = ((buffer(10) & 0xffL) * 256 + (buffer(11) & 0xff)) / angularRateDivider,
+          rollAxisInRadPerSecond = ((buffer(12) & 0xffL) * 256 + (buffer(13) & 0xff)) / angularRateDivider
+        )
+      )
+
+    }
 
   private def initMPU2950(): F[Unit] = for {
     _ <- slowWrite(PWR_MGMT_1.DEVICE_RESET)
@@ -47,6 +70,12 @@ class SPIBasedImplementation[F[_]](
     spiDevice.write(register.READ, 0x00.toByte)(1)
   }
 
+  private def readFrom(register: Register, numberOfBytes: Int): F[Array[Byte]] = S.delay {
+    val data = Array.fill(numberOfBytes + 1)(0x00.toByte)
+    data.update(0, register.READ)
+    spiDevice.write(data: _*)
+  }
+
 }
 
 object SPIBasedImplementation {
@@ -62,7 +91,14 @@ object SPIBasedImplementation {
       )
     }.map(new SPIBasedImplementation[F](_))
 
+  val preSetCalibration = CalibrationData(
+    accelerationDivider = 2048d, // because the full scale range of the accelerometer is ±16g
+    angularRateDivider = 16.4d // because the the gyroscope full scale range is ±2000°/s
+  )
+
   private val SPISpeed = 20000000 // 20Mhz
+
+  private val GInMeterPerSecondPerSecond = 9.8
 
   abstract class Register(protected val address: Byte) {
     import Register._
@@ -100,6 +136,8 @@ object SPIBasedImplementation {
       val ExpectedValue = 0x71.toByte
 
     }
+
+    case object ACCEL_XOUT_H extends Register(address = 0x3b.toByte)
 
   }
 
