@@ -24,25 +24,27 @@ class SPIBasedImplementation[F[_]](
   } yield ()
 
   override def read(calibrationData: CalibrationData): F[ImuData] =
-    readFrom(ACCEL_XOUT_H, 14).map { buffer =>
-      import calibrationData._
-      ImuData(
-        Accelerations(
-          xAxisInMeterPerSecondPerSecond =
-            ((buffer(0) & 0xffL) * 256 + (buffer(1) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider,
-          yAxisInMeterPerSecondPerSecond =
-            ((buffer(2) & 0xffL) * 256 + (buffer(3) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider,
-          zAxisInMeterPerSecondPerSecond =
-            ((buffer(4) & 0xffL) * 256 + (buffer(5) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider
-        ),
-        AngularRates(
-          pitchAxisInRadPerSecond = ((buffer(8) & 0xffL) * 256 + (buffer(9) & 0xff)) / angularRateDivider,
-          yawAxisInRadPerSecond = ((buffer(10) & 0xffL) * 256 + (buffer(11) & 0xff)) / angularRateDivider,
-          rollAxisInRadPerSecond = ((buffer(12) & 0xffL) * 256 + (buffer(13) & 0xff)) / angularRateDivider
+    readFrom(ACCEL_XOUT_H, 14)
+      .map(_.drop(1)) // drop the first byte
+      .map { buffer =>
+        import calibrationData._
+        ImuData(
+          Accelerations(
+            xAxisInMeterPerSecondPerSecond =
+              ((buffer(0) & 0xff) * 256 + (buffer(1) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider,
+            yAxisInMeterPerSecondPerSecond =
+              ((buffer(2) & 0xff) * 256 + (buffer(3) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider,
+            zAxisInMeterPerSecondPerSecond =
+              ((buffer(4) & 0xff) * 256 + (buffer(5) & 0xff)) * GInMeterPerSecondPerSecond / accelerationDivider
+          ),
+          AngularRates(
+            pitchAxisInRadPerSecond = ((buffer(8) & 0xff) * 256 + (buffer(9) & 0xff)) / angularRateDivider,
+            yawAxisInRadPerSecond = ((buffer(10) & 0xff) * 256 + (buffer(11) & 0xff)) / angularRateDivider,
+            rollAxisInRadPerSecond = ((buffer(12) & 0xff) * 256 + (buffer(13) & 0xff)) / angularRateDivider
+          )
         )
-      )
 
-    }
+      }
 
   private def initMPU2950(): F[Unit] = for {
     _ <- slowWrite(PWR_MGMT_1.DEVICE_RESET)
@@ -70,10 +72,10 @@ class SPIBasedImplementation[F[_]](
     spiDevice.write(register.READ, 0x00.toByte)(1)
   }
 
-  private def readFrom(register: Register, numberOfBytes: Int): F[Array[Byte]] = S.delay {
+  private def readFrom(register: Register, numberOfBytes: Int): F[Vector[Byte]] = S.delay {
     val data = Array.fill(numberOfBytes + 1)(0x00.toByte)
     data.update(0, register.READ)
-    spiDevice.write(data: _*)
+    spiDevice.write(data: _*).toVector
   }
 
 }
@@ -98,7 +100,7 @@ object SPIBasedImplementation {
 
   private val SPISpeed = 20000000 // 20Mhz
 
-  private val GInMeterPerSecondPerSecond = 9.8
+  private val GInMeterPerSecondPerSecond = 9.80665
 
   abstract class Register(protected val address: Byte) {
     import Register._
