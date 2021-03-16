@@ -84,7 +84,7 @@ object SPIBasedImplementation {
     }
 
     case object SMPRT_DIV extends Register(address = 0x19.toByte) {
-      val SMPLRT_DIV = Parameter(address, 0x01.toByte) // keep the sample rate at 1kHz
+      val SMPLRT_DIV = Parameter(address, 0x00.toByte) // keep the sample rate at 1kHz
     }
 
     case object GYRO_CONFIG extends Register(address = 0x1b.toByte) {
