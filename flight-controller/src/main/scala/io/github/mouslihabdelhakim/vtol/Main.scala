@@ -1,8 +1,8 @@
 package io.github.mouslihabdelhakim.vtol
 
 import cats.effect.{ExitCode, IO, IOApp}
-import cats.syntax.flatMap._
 import cats.syntax.parallel._
+import cats.syntax.show._
 import fs2.Stream
 import io.github.mouslihabdelhakim.vtol.services.navio2.barometer.MS5611
 import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950
@@ -48,8 +48,10 @@ object Main extends IOApp {
       .drain
 
     val imu = MPU2950
-      .spi[IO]
-      .flatTap(_.init())
+      .stream[IO](200.milliseconds)
+      .map(d => println(d.show))
+      .compile
+      .drain
 
     List(
       barometer,
