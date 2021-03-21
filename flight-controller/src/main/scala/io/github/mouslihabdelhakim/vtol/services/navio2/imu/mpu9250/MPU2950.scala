@@ -4,8 +4,8 @@ import cats.Show
 import cats.effect.{Sync, Timer}
 import cats.syntax.show._
 import fs2.Stream
-import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.ImuData.{Accelerations, AngularRates}
-import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.{CalibrationData, ImuData}
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.ImuData._
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950._
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -46,6 +46,7 @@ object MPU2950 {
 
   case class ImuData(
       accelerations: Accelerations,
+      sensorTemperature: SensorTemperature,
       angularRates: AngularRates
   )
 
@@ -65,23 +66,32 @@ object MPU2950 {
       }
     }
 
+    case class SensorTemperature(value: Double) extends AnyVal
+
+    object SensorTemperature {
+      implicit val show: Show[SensorTemperature] = Show.show { t =>
+        f"SensorTemperature: ${t.value}%2.2f C"
+      }
+    }
+
     case class AngularRates(
         pitchAxisInRadPerSecond: Double,
-        yawAxisInRadPerSecond: Double,
-        rollAxisInRadPerSecond: Double
+        rollAxisInRadPerSecond: Double,
+        yawAxisInRadPerSecond: Double
     )
 
     object AngularRates {
       implicit val show: Show[AngularRates] = Show.show { ang =>
         val pitch = f"pitch: ${ang.pitchAxisInRadPerSecond}%2.2f rad/s"
-        val yaw   = f"yaw: ${ang.yawAxisInRadPerSecond}%2.2f rad/s"
         val roll  = f"roll: ${ang.rollAxisInRadPerSecond}%2.2f rad/s"
+        val yaw   = f"yaw: ${ang.yawAxisInRadPerSecond}%2.2f rad/s"
         s"Accelerations(${pitch}, ${yaw}, ${roll})"
       }
     }
 
     implicit val show: Show[ImuData] = Show.show { data =>
-      s"ImuData(${data.accelerations.show}, ${data.angularRates.show})"
+      import data._
+      s"ImuData(${accelerations.show}, ${angularRates.show}, ${sensorTemperature.show})"
     }
   }
 
