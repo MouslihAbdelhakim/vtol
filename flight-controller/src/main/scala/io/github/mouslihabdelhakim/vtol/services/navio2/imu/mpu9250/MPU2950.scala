@@ -67,15 +67,15 @@ object MPU2950 {
 
     case class AngularRates(
         pitchAxisInRadPerSecond: Double,
-        yawAxisInRadPerSecond: Double,
-        rollAxisInRadPerSecond: Double
+        rollAxisInRadPerSecond: Double,
+        yawAxisInRadPerSecond: Double
     )
 
     object AngularRates {
       implicit val show: Show[AngularRates] = Show.show { ang =>
         val pitch = f"pitch: ${ang.pitchAxisInRadPerSecond}%2.2f rad/s"
-        val yaw   = f"yaw: ${ang.yawAxisInRadPerSecond}%2.2f rad/s"
         val roll  = f"roll: ${ang.rollAxisInRadPerSecond}%2.2f rad/s"
+        val yaw   = f"yaw: ${ang.yawAxisInRadPerSecond}%2.2f rad/s"
         s"Accelerations(${pitch}, ${yaw}, ${roll})"
       }
     }
