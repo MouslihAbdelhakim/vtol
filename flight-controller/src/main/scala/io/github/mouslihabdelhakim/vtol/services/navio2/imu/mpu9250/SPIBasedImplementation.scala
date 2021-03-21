@@ -34,9 +34,9 @@ class SPIBasedImplementation[F[_]](
           zAxisInMeterPerSecondPerSecond = buffer(2) * GInMeterPerSecondPerSecond / accelerationDivider
         ),
         AngularRates(
-          pitchAxisInRadPerSecond = buffer(4) / angularRateDivider,
-          yawAxisInRadPerSecond = buffer(5) / angularRateDivider,
-          rollAxisInRadPerSecond = buffer(6) / angularRateDivider
+          pitchAxisInRadPerSecond = ToRadians * buffer(4) / angularRateDivider,
+          rollAxisInRadPerSecond = ToRadians * buffer(5) / angularRateDivider,
+          yawAxisInRadPerSecond = ToRadians * buffer(6) / angularRateDivider
         )
       )
 
@@ -80,6 +80,7 @@ object SPIBasedImplementation {
   )
 
   private val GInMeterPerSecondPerSecond = 9.80665
+  private val ToRadians                  = Math.PI / 180
 
   private val DelayAfterWrite = 10.millis
 
@@ -103,7 +104,7 @@ object SPIBasedImplementation {
     val FS_SEL      = State(GYRO_CONFIG, 0x18.toByte) // set the gyroscope full scale range to ±2000°/s
 
     val ACCEL_CONFIG = Register(address = 0x1c.toByte)
-    val AFS_SEL      = State(ACCEL_CONFIG, 0x3.toByte) // set the full scale range of the accelerometer to ±16g
+    val AFS_SEL      = State(ACCEL_CONFIG, 0x18.toByte) // set the full scale range of the accelerometer to ±16g
 
     val WHO_AM_I            = Register(address = 0x75.toByte)
     val WhoAmIExpectedValue = 0x71.toByte
