@@ -34,7 +34,7 @@ object MPU2950 {
     _ <- Stream.eval(imu.init())
     data <- Stream
               .repeatEval(
-                imu.read(SPIBasedImplementation.preSetCalibration)
+                imu.read(SPIBasedImplementation.PreSetCalibration)
               )
               .metered(sampleEvery)
   } yield data
