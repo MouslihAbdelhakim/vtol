@@ -4,8 +4,8 @@ import cats.Show
 import cats.effect.{Sync, Timer}
 import cats.syntax.show._
 import fs2.Stream
-import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.ImuData.{Accelerations, AngularRates}
-import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.{CalibrationData, ImuData}
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950.ImuData._
+import io.github.mouslihabdelhakim.vtol.services.navio2.imu.mpu9250.MPU2950._
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -46,6 +46,7 @@ object MPU2950 {
 
   case class ImuData(
       accelerations: Accelerations,
+      sensorTemperature: SensorTemperature,
       angularRates: AngularRates
   )
 
@@ -65,6 +66,14 @@ object MPU2950 {
       }
     }
 
+    case class SensorTemperature(value: Double) extends AnyVal
+
+    object SensorTemperature {
+      implicit val show: Show[SensorTemperature] = Show.show { t =>
+        f"SensorTemperature: ${t.value}%2.2f C"
+      }
+    }
+
     case class AngularRates(
         pitchAxisInRadPerSecond: Double,
         rollAxisInRadPerSecond: Double,
@@ -81,7 +90,8 @@ object MPU2950 {
     }
 
     implicit val show: Show[ImuData] = Show.show { data =>
-      s"ImuData(${data.accelerations.show}, ${data.angularRates.show})"
+      import data._
+      s"ImuData(${accelerations.show}, ${angularRates.show}, ${sensorTemperature.show})"
     }
   }
 

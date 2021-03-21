@@ -33,6 +33,7 @@ class SPIBasedImplementation[F[_]](
           yAxisInMeterPerSecondPerSecond = buffer(1) * GInMeterPerSecondPerSecond / accelerationDivider,
           zAxisInMeterPerSecondPerSecond = buffer(2) * GInMeterPerSecondPerSecond / accelerationDivider
         ),
+        temperature(buffer(3)),
         AngularRates(
           pitchAxisInRadPerSecond = ToRadians * buffer(4) / angularRateDivider,
           rollAxisInRadPerSecond = ToRadians * buffer(5) / angularRateDivider,
@@ -79,8 +80,10 @@ object SPIBasedImplementation {
     angularRateDivider = 16.4d // because the the gyroscope full scale range is ±2000°/s
   )
 
-  private val GInMeterPerSecondPerSecond = 9.80665
-  private val ToRadians                  = Math.PI / 180
+  private val GInMeterPerSecondPerSecond        = 9.80665d
+  private val ToRadians                         = Math.PI / 180
+  private def temperature(registerValue: Short) =
+    SensorTemperature((registerValue / 340d) + 36) // from page 35 in RM-MPU-9150A-00.pdf
 
   private val DelayAfterWrite = 10.millis
 
