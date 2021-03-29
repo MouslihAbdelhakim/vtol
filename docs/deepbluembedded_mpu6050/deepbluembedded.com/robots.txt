@@ -1,0 +1,5 @@
+Sitemap: https://deepbluembedded.com/sitemap.xml
+Sitemap: https://deepbluembedded.com/news-sitemap.xml
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
